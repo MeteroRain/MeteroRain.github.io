@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>加密/解密</title>
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+		}
+		h1 {
+			text-align: center;
+		}
+		.container {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			margin-top: 50px;
+		}
+		button {
+			margin: 10px;
+			padding: 10px 20px;
+			background-color: #4d8140;
+			color: white;
+			border: none;
+			border-radius: 5px;
+			cursor: pointer;
+			font-size: 20px;
+		}
+		input[type="file"] {
+			margin-bottom: 20px;
+		}
+	</style>
+</head>
+<body>
+	<h1>地编加密/解密</h1>
+	<div class="container">
+		<input type="file" id="file-input">
+		<button id="encrypt-button">加密</button>
+		<button id="decrypt-button">解密</button>
+	</div>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+	<script>
+		// 获取输入文件和按钮元素
+		const fileInput = document.getElementById("file-input");
+		const encryptButton = document.getElementById("encrypt-button");
+		const decryptButton = document.getElementById("decrypt-button");
+
+		// 加密和解密函数
+		function desCBCEncrypt(plaintext, key, iv) {
+			var ciphertext = CryptoJS.DES.encrypt(plaintext, key, { iv: iv, mode: CryptoJS.mode.CBC });
+			return ciphertext.toString();
+		}
+
+		function desCBCDecrypt(ciphertext, key, iv) {
+			var bytes = CryptoJS.DES.decrypt(ciphertext, key, { iv: iv, mode: CryptoJS.mode.CBC });
+			var plaintext = bytes.toString(CryptoJS.enc.Utf8);
+			return plaintext;
+		}
+
+		// 处理加密按钮点击事件
+		encryptButton.addEventListener("click", () => {
+			const file = fileInput.files[0];
+			if (!file) {
+				alert("请先选择文件");
+				return;
+			}
+
+			const reader = new FileReader();
+			reader.readAsText(file); // 以文本形式读取文件
+
+			reader.onload = () => {
+				const plaintext = reader.result;
+				const key = CryptoJS.enc.Utf8.parse("20150528");
+				const iv = CryptoJS.enc.Utf8.parse("12345678");
+
+				const ciphertext = desCBCEncrypt(plaintext, key, iv);
+				saveTextAsFile(ciphertext, "encrypted.txt");
+			};
+		});
+
+		// 处理解密按钮点击事件
+		decryptButton.addEventListener("click", () => {
+			const file = fileInput.files[0];
+			if (!file) {
+				alert("请先选择文件。");
+				return;
+			}
+
+			const reader = new FileReader();
+			reader.readAsText(file); // 以文本形式读取文件
+
+			reader.onload = () => {
+				const ciphertext = reader.result;
+				const key = CryptoJS.enc.Utf8.parse("20150528");
+				const iv = CryptoJS.enc.Utf8.parse("12345678");
+
+				const plaintext = desCBCDecrypt(ciphertext, key, iv);
+				saveTextAsFile(plaintext, "decrypted.txt");
+			};
+		});
+
+		// 将文本保存为文件的函数
+		function saveTextAsFile(text, filename) {
+			const blob = new Blob([text], {type: "text/plain;charset=utf-8"});
+			const link = document.createElement("a");
+			link.download = filename;
+			link.href = URL.createObjectURL(blob);
+			link.click();
+		}
+	</script>
+</body>
+</html>
